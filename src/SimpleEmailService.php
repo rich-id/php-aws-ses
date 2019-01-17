@@ -262,6 +262,41 @@ class SimpleEmailService
 		return $this;
 	}
 
+    /**
+     * Lists the domains that have been verified
+     *
+     * @return array An array containing two items: a list of verified domains, and the request id.
+     */
+    public function listVerifiedDomains() {
+        $ses_request = $this->getRequestHandler('GET');
+        $ses_request->setParameter('Action', 'ListIdentities');
+        $ses_request->setParameter('IdentityType', 'Domain');
+
+        $ses_response = $ses_request->getResponse();
+        if($ses_response->error === false && $ses_response->code !== 200) {
+            $ses_response->error = array('code' => $ses_response->code, 'message' => 'Unexpected HTTP status');
+        }
+        if($ses_response->error !== false) {
+            $this->__triggerError('listVerifiedEmailAddresses', $ses_response->error);
+            return false;
+        }
+
+        $response = array();
+        if(!isset($ses_response->body)) {
+            return $response;
+        }
+
+        $domains = array();
+        foreach($ses_response->body->ListIdentitiesResult->Identities->member as $domain) {
+            $domains[] = (string)$domain;
+        }
+
+        $response['Domains'] = $domains;
+        $response['RequestId'] = (string)$ses_response->body->ResponseMetadata->RequestId;
+
+        return $response;
+    }
+
 	/**
 	* Lists the email addresses that have been verified and can be used as the 'From' address
 	*
