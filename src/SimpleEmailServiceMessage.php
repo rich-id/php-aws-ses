@@ -685,8 +685,17 @@ final class SimpleEmailServiceMessage {
      */
     private function transformAddress($address)
     {
+        // Exclude AWS SES simulator addresses
         // Ignore if yopmail address
-        if (preg_match('/@yopmail.com/m', $address)) {
+        $exclude = [
+            'success@simulator.amazonses.com',
+            'bounce@simulator.amazonses.com',
+            'ooto@simulator.amazonses.com',
+            'complaint@simulator.amazonses.com',
+            'suppressionlist@simulator.amazonses.com'
+        ];
+
+        if (preg_match('/@yopmail.com/m', $address) || in_array($address, $exclude, true)) {
             return $address;
         }
 
