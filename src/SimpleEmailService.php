@@ -98,6 +98,11 @@ class SimpleEmailService
 	 */
 	protected $__verifyPeer = true;
 
+    /**
+     * @var string
+     */
+	protected $env;
+
 	/**
 	* Constructor
 	*
@@ -105,14 +110,16 @@ class SimpleEmailService
 	* @param string $secretKey Secret key
 	* @param string $host Amazon Host through which to send the emails
 	* @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
+    * @param string $env The application environment
 	* @return void
 	*/
-	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true) {
+	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $env = 'prod') {
 		if ($accessKey !== null && $secretKey !== null) {
 			$this->setAuth($accessKey, $secretKey);
 		}
 		$this->__host = $host;
 		$this->__trigger_errors = $trigger_errors;
+		$this->env = $env;
 	}
 
 	/**
@@ -469,6 +476,10 @@ class SimpleEmailService
 	*  @link(AWS SES Response formats, http://docs.aws.amazon.com/ses/latest/DeveloperGuide/query-interface-responses.html)
 	*/
 	public function sendEmail($sesMessage, $use_raw_request = false , $trigger_error = null) {
+        if ($this->env !== 'prod') {
+            $sesMessage->yopmailisation($this->env);
+        }
+
 		if(!$sesMessage->validate()) {
 			$this->__triggerError('sendEmail', 'Message failed validation.');
 			return false;
