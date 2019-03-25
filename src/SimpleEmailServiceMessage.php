@@ -632,4 +632,79 @@ final class SimpleEmailServiceMessage {
 
         return true;
     }
+
+    /**
+     * @param string $env
+     */
+    public function yopmailisation($env)
+    {
+        $tmpTo = $this->to;
+        $tmpCc = $this->cc;
+        $tmpBcc = $this->bcc;
+
+        $this->clearTo();
+        $this->clearCC();
+        $this->clearBCC();
+
+
+        // Transform all addresses
+        foreach ($tmpTo as $address) {
+            $this->addTo($this->transformAddress($address));
+        }
+
+        foreach ($tmpCc as $address) {
+            $this->addCC($this->transformAddress($address));
+        }
+
+        foreach ($tmpBcc as $address) {
+            $this->addBCC($this->transformAddress($address));
+        }
+
+        // Add env prefix to subject
+        switch ($env) {
+            case 'dev':
+                $prefix = '[DEV] ';
+                break;
+
+            case 'preprod':
+                $prefix = '[PRE-PROD] ';
+                break;
+
+            default:
+                $prefix = '';
+                break;
+        }
+
+        $this->setSubject(sprintf('%s%s', $prefix, $this->subject));
+    }
+
+    /**
+     * @param string $address
+     *
+     * @return string
+     */
+    private function transformAddress($address)
+    {
+        // Ignore if yopmail address
+        if (preg_match('/@yopmail.com/m', $address)) {
+            return $address;
+        }
+
+        // Find name and address
+        $regex = "/((?'name'[^< ]*) <)?(?'address'.*@.*\.[^>]*)>?/m";
+        $replace = ['.', '-', '@'];
+
+        preg_match($regex, $address, $matches);
+        // Replace special chars and set domain to yopmail.com
+        $address = str_replace($replace, '_', $matches['address']);
+        $address = substr($address, 0, 25);
+        $address .= '@yopmail.com';
+
+        // Return with name if exist
+        if (isset($matches['name'])) {
+            return sprintf('%s <%s>', $matches['name'], $address);
+        }
+
+        return $address;
+    }
 }

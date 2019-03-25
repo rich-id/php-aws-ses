@@ -122,6 +122,11 @@ class SimpleEmailService
      */
 	protected $__requestSignatureVersion;
 
+	/**
+     * @var string
+     */
+	protected $env;
+
     /**
      * Constructor
      *
@@ -131,14 +136,16 @@ class SimpleEmailService
      * @param boolean $trigger_errors Trigger PHP errors when AWS SES API returns an error
      * @param string $requestSignatureVersion Version of the request signature
      *               Currently only V4 supported by AWS. Keeping parameter for BW compatibility reasons.
+    * @param string $env The application environment
      */
-	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $requestSignatureVersion = self::REQUEST_SIGNATURE_V4) {
+	public function __construct($accessKey = null, $secretKey = null, $host = self::AWS_US_EAST_1, $trigger_errors = true, $requestSignatureVersion = self::REQUEST_SIGNATURE_V4, $env = 'prod') {
 		if ($accessKey !== null && $secretKey !== null) {
 			$this->setAuth($accessKey, $secretKey);
 		}
 		$this->__host = $host;
 		$this->__trigger_errors = $trigger_errors;
 		$this->__requestSignatureVersion = $requestSignatureVersion;
+		$this->env = $env;
 	}
 
     /**
@@ -518,6 +525,10 @@ class SimpleEmailService
 	*  @link(AWS SES Response formats, http://docs.aws.amazon.com/ses/latest/DeveloperGuide/query-interface-responses.html)
 	*/
 	public function sendEmail($sesMessage, $use_raw_request = false , $trigger_error = null) {
+        if ($this->env !== 'prod') {
+            $sesMessage->yopmailisation($this->env);
+        }
+
 		if(!$sesMessage->validate()) {
 			$this->__triggerError('sendEmail', 'Message failed validation.');
 			return false;
