@@ -415,6 +415,60 @@ class SimpleEmailService
 		return $response;
 	}
 
+    /**
+     * @param $identity
+     * @param $notificationType
+     * @param $snsTopic
+     *
+     * @return bool
+     */
+	public function setIdentityNotificationTopic($identity, $notificationType, $snsTopic) {
+	    $request = $this->getRequestHandler('POST');
+	    $request->setParameter('Action', 'SetIdentityNotificationTopic');
+	    $request->setParameter('Identity', $identity);
+	    $request->setParameter('NotificationType', $notificationType);
+	    $request->setParameter('SnsTopic', $snsTopic);
+
+        $response = $request->getResponse();
+        if($response->error === false && $response->code !== 200) {
+            $response->error = array('code' => $response->code, 'message' => 'Unexpected HTTP status');
+        }
+
+        if($response->error !== false) {
+            $this->__triggerError('setIdentityNotificationTopic', $response->error);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $identity
+     * @param $mailFrom
+     *
+     * @return bool
+     */
+    public function setIdentityMailFromDomain($identity, $mailFrom)
+    {
+        $request = $this->getRequestHandler('POST');
+        $request->setParameter('Action', 'SetIdentityMailFromDomain');
+        $request->setParameter('Identity', $identity);
+        $request->setParameter('MailFromDomain', $mailFrom);
+        $request->setParameter('BehaviorOnMXFailure', 'UseDefaultValue');
+
+        $response = $request->getResponse();
+        if($response->error === false && $response->code !== 200) {
+            $response->error = array('code' => $response->code, 'message' => 'Unexpected HTTP status');
+        }
+
+        if($response->error !== false) {
+            $this->__triggerError('setIdentityMailFromDomain', $response->error);
+            return false;
+        }
+
+        return true;
+    }
+
 	/**
 	* Removes the specified email address from the list of verified addresses.
 	*
